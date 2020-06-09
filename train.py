@@ -45,13 +45,15 @@ args = parser.parse_args()
 os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
 import tensorflow as tf
-import tflearn
+# import tflearn
 import keras
 
 import network
 import data_util.liver
 import data_util.brain
 from data_util.data import Split
+
+tf.compat.v1.disable_eager_execution()
 
 def main():
     repoRoot = os.path.dirname(os.path.realpath(__file__))
@@ -184,9 +186,9 @@ def main():
             fd.pop('id1', [])
             fd.pop('id2', [])
             t1 = default_timer()
-            tflearn.is_training(True, session=sess)
+            # tflearn.is_training(True, session=sess)
             summ, _ = sess.run([framework.summaryExtra, framework.adamOpt],
-                               set_tf_keys(fd, learningRate=lr))
+                               set_tf_keys(fd, learningRate=lr, is_training=True))
 
             for v in tf.compat.v1.Summary().FromString(summ).value:
                 if v.tag == 'loss':

@@ -4,24 +4,27 @@ from __future__ import print_function
 from tensorflow.python.platform import flags
 from tensorflow.python.platform import app
 from tensorflow.python import pywrap_tensorflow
+from tensorflow.keras.layers import Conv2D, Conv2DTranspose
 import numpy as np
 import tensorflow as tf
-import tflearn
+# import tflearn
 import re
 import sys
 
 
 def ReLU(target, name=None):
-    return tflearn.activations.relu(target)
+    return tf.nn.relu(target, name=name)
+    # return keras.layers.ReLU(name=name)(target)
 
 
 def LeakyReLU(target, alpha=0.1, name=None):
-    return tflearn.activations.leaky_relu(target, alpha=alpha, name=name)
+    return tf.nn.leaky_relu(target, alpha=alpha, name=name)
+    # return keras.layers.LeakyReLU(alpha=alpha, name=name)(target)
 
 
 def convolve(opName, inputLayer, inputChannel, outputChannel, kernelSize, stride, stddev=1e-2):
-    return tflearn.layers.conv_2d(inputLayer, outputChannel, kernelSize, strides=stride,
-                                  padding='same', activation='linear', bias=True, scope=opName)
+    return Conv2D(outputChannel, kernelSize, strides=stride,
+                  padding='same', activation='linear', bias=True, name=opName)(inputLayer)
     # kernelVariables = tf.Variable(
     #     tf.truncated_normal(
     #         dtype=tf.float32,
@@ -51,23 +54,23 @@ def convolveLeakyReLU(opName, inputLayer, inputChannel, outputChannel, kernelSiz
 
 
 def upconvolve(opName, inputLayer, inputChannel, outputChannel, kernelSize, stride, targetH, targetW, stddev=1e-2):
-    return tflearn.layers.conv.conv_2d_transpose(inputLayer, outputChannel, kernelSize, [targetH, targetW], strides=stride,
-                                                 padding='same', activation='linear', bias=False, scope=opName)
-    # kernelVariables = tf.Variable(
-    #     tf.truncated_normal(
-    #         dtype=tf.float32,
-    #         shape=[kernelSize, kernelSize, outputChannel, inputChannel],
-    #         stddev=stddev),
-    #     name=opName+'.kernel')
-    # # bias is not used in upconvolutions in FlowNet.
-    # # biasVariables = tf.Variable(tf.constant(0.0, dtype=tf.float32, shape=[outputChannel]), name=opName+'.bias')
-    # trainedVariables[opName + '.kernel'] = kernelVariables
-    # upconvolved = tf.nn.conv2d_transpose(inputLayer,
-    #     kernelVariables,
-    #     tf.stack([tf.shape(inputLayer)[0], targetH, targetW, outputChannel]),
-    #     [1, stride, stride, 1],
-    #     'SAME', name=opName+'.upconvolved')
-    # return upconvolved
+    # return Conv2DTranspose(outputChannel, kernelSize, [targetH, targetW], strides=stride,
+    #                      padding='same', activation='linear', bias=False, scope=opName)(inputLayer)
+    kernelVariables = tf.Variable(
+        tf.truncated_normal(
+            dtype=tf.float32,
+            shape=[kernelSize, kernelSize, outputChannel, inputChannel],
+            stddev=stddev),
+        name=opName+'.kernel')
+    # bias is not used in upconvolutions in FlowNet.
+    # biasVariables = tf.Variable(tf.constant(0.0, dtype=tf.float32, shape=[outputChannel]), name=opName+'.bias')
+    trainedVariables[opName + '.kernel'] = kernelVariables
+    upconvolved = tf.nn.conv2d_transpose(inputLayer,
+        kernelVariables,
+        tf.stack([tf.shape(inputLayer)[0], targetH, targetW, outputChannel]),
+        [1, stride, stride, 1],
+        'SAME', name=opName+'.upconvolved')
+    return upconvolved
 
 
 def upconvolveReLU(opName, inputLayer, inputChannel, outputChannel, kernelSize, stride, targetH, targetW, stddev=1e-2):
@@ -145,7 +148,7 @@ class MultiGPUs:
                     return '/cpu:0'
                 else:
                     return '/gpu:%d' % i
-            with tf.device(auto_gpu):
+            with tf.compat.v1.device(auto_gpu):
                 self.current_device = i
                 net.controller = self
                 result = net(*[arg[i] for arg in args])

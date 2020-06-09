@@ -1,14 +1,14 @@
 import tensorflow as tf
-import tflearn
-from keras.layers.convolutional import UpSampling3D
-from tflearn.initializations import normal
+# import tflearn
+from keras.layers.convolutional import UpSampling3D, Conv3D, Conv3DTranspose
+# from tflearn.initializations import normal
 
 from .utils import Network, ReLU, LeakyReLU
 
 
-def convolve(opName, inputLayer, outputChannel, kernelSize, stride, stddev=1e-2, reuse=False, weights_init='uniform_scaling'):
-    return tflearn.layers.conv_3d(inputLayer, outputChannel, kernelSize, strides=stride,
-                                  padding='same', activation='linear', bias=True, scope=opName, reuse=reuse, weights_init=weights_init)
+def convolve(opName, inputLayer, outputChannel, kernelSize, stride, stddev=1e-2, reuse=False, weights_init='glorot_uniform'):
+    return Conv3D(outputChannel, kernelSize, strides=stride,
+                  padding='same', activation='linear', bias=True, name=opName, kernel_initializer=weights_init)(inputLayer)
 
 
 def convolveReLU(opName, inputLayer, outputChannel, kernelSize, stride, stddev=1e-2, reuse=False):
@@ -25,9 +25,9 @@ def convolveLeakyReLU(opName, inputLayer, outputChannel, kernelSize, stride, alp
                      alpha, opName+'_leakilyrectified')
 
 
-def upconvolve(opName, inputLayer, outputChannel, kernelSize, stride, targetShape, stddev=1e-2, reuse=False, weights_init='uniform_scaling'):
-    return tflearn.layers.conv.conv_3d_transpose(inputLayer, outputChannel, kernelSize, targetShape, strides=stride,
-                                                 padding='same', activation='linear', bias=False, scope=opName, reuse=reuse, weights_init=weights_init)
+def upconvolve(opName, inputLayer, outputChannel, kernelSize, stride, targetShape, stddev=1e-2, reuse=False, weights_init='glorot_uniform'):
+    return Conv3DTranspose(outputChannel, kernelSize, strides=stride,
+                         padding='same', activation='linear', use_bias=False, name=opName, kernel_initializer=weights_init)(inputLayer)
 
 
 def upconvolveReLU(opName, inputLayer, outputChannel, kernelSize, stride, targetShape, stddev=1e-2, reuse=False):
@@ -222,10 +222,10 @@ class VTNAffineStem(Network):
         conv6_1 = convolveLeakyReLU(
             'conv6_1', conv6,      512,  3, 1)
         ks = conv6_1.shape.as_list()[1:4]
-        conv7_W = tflearn.layers.conv_3d(
-            conv6_1, 9, ks, strides=1, padding='valid', activation='linear', bias=False, scope='conv7_W')
-        conv7_b = tflearn.layers.conv_3d(
-            conv6_1, 3, ks, strides=1, padding='valid', activation='linear', bias=False, scope='conv7_b')
+        conv7_W = Conv3D(
+            9, ks, strides=1, padding='valid', activation='linear', bias=False, name='conv7_W')(conv6_1)
+        conv7_b = Conv3D(
+            3, ks, strides=1, padding='valid', activation='linear', bias=False, name='conv7_b')(conv6_1)
 
         I = [[[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]]
         W = tf.reshape(conv7_W, [-1, 3, 3]) * self.flow_multiplier

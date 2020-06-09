@@ -2,23 +2,23 @@
   "files": {
     "/": {
       "type": "HDF5",
-      "path": "datasets/msd_dataset.h5"
+      "path": "/home/w19787/tensorflow_datasets/microsoft_register/liver_train/msd_dataset.h5"
     },
     "youyi": {
       "type": "HDF5",
-      "path": "datasets/youyi_liver.h5"
+      "path": "/home/w19787/tensorflow_datasets/microsoft_register/liver_train/youyi_liver.h5"
     },
     "yanx": {
       "type": "HDF5",
-      "path": "datasets/sliver_val.h5"
+      "path": "/home/w19787/tensorflow_datasets/microsoft_register/liver_val/sliver_val.h5"
     },
     "lits": {
       "type": "HDF5",
-      "path": "datasets/lits_val.h5"
+      "path": "/home/w19787/tensorflow_datasets/microsoft_register/liver_val/lits_val.h5"
     },
     "pigs": {
       "type": "HDF5",
-      "path": "datasets/lspig_val.h5"
+      "path": "/home/w19787/tensorflow_datasets/microsoft_register/liver_val/lspig_val.h5"
     }
   },
   "image_size": [

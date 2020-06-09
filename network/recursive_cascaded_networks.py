@@ -1,5 +1,5 @@
 import tensorflow as tf
-import tflearn
+# import tflearn
 import numpy as np
 
 from .utils import Network
@@ -224,9 +224,11 @@ class RecursiveCascadedNetworks(Network):
         return raw_loss
 
     def regularize_loss(self, flow):
+        print(flow.shape)
+
         ret = ((tf.nn.l2_loss(flow[:, 1:, :, :] - flow[:, :-1, :, :]) +
                 tf.nn.l2_loss(flow[:, :, 1:, :] - flow[:, :, :-1, :]) +
-                tf.nn.l2_loss(flow[:, :, :, 1:] - flow[:, :, :, :-1])) / np.prod(flow.shape.as_list()[1:5]))
+                tf.nn.l2_loss(flow[:, :, :, 1:] - flow[:, :, :, :-1])))
         return ret
 
     def jacobian_det(self, flow):

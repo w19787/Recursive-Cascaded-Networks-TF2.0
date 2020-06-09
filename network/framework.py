@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-import tflearn
+# import tflearn
 from tqdm import tqdm
 
 from . import transform
@@ -43,6 +43,8 @@ class FrameworkUnsupervised:
         point2 = tf.compat.v1.placeholder(dtype=tf.float32, shape=[
                                 None, 6, 3], name='point2')
 
+        is_training = tf.compat.v1.placeholder(dtype=tf.bool, shape=(), name='is_training')
+
         bs = tf.shape(input=img1)[0]
         augImg1, preprocessedImg2 = img1 / 255.0, img2 / 255.0
 
@@ -54,7 +56,7 @@ class FrameworkUnsupervised:
             augFlow = transform.free_form_fields(imgs, control_fields)
 
             def augmentation(x):
-                return tf.cond(pred=tflearn.get_training_mode(), true_fn=lambda: self.reconstruction([x, augFlow]),
+                return tf.cond(pred=is_training, true_fn=lambda: self.reconstruction([x, augFlow]),
                                false_fn=lambda: x)
 
             def augmenetation_pts(incoming):
@@ -64,7 +66,7 @@ class FrameworkUnsupervised:
                     pt_mask = tf.cast(tf.reduce_all(
                         input_tensor=incoming >= 0, axis=-1, keepdims=True), tf.float32)
                     return aug_pt * pt_mask - (1 - pt_mask)
-                return tf.cond(pred=tflearn.get_training_mode(), true_fn=lambda: aug(incoming), false_fn=lambda: incoming)
+                return tf.cond(pred=is_training, true_fn=lambda: aug(incoming), false_fn=lambda: incoming)
             
             augImg2 = augmentation(preprocessedImg2)
             augSeg2 = augmentation(seg2)
@@ -150,14 +152,15 @@ class FrameworkUnsupervised:
                 full_results['seg2'] = []
                 full_results['img1'] = []
                 full_results['img2'] = []
-        tflearn.is_training(False, sess)
+        # tflearn.is_training(False, sess)
         if show_tqdm:
             generator = tqdm(generator)
         for fd in generator:
             id1 = fd.pop('id1')
             id2 = fd.pop('id2')
+
             results = sess.run(self.get_predictions(
-                *keys), feed_dict=set_tf_keys(fd))
+                *keys), feed_dict=set_tf_keys(fd, is_training=False))
             if not summary:
                 results['id1'] = id1
                 results['id2'] = id2

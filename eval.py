@@ -26,7 +26,7 @@ args = parser.parse_args()
 os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
 import tensorflow as tf
-import tflearn
+# import tflearn
 
 import network
 import data_util.liver
@@ -85,13 +85,13 @@ def main():
         tf.compat.v1.GraphKeys.GLOBAL_VARIABLES))
     checkpoint = args.checkpoint
     saver.restore(sess, checkpoint)
-    tflearn.is_training(False, session=sess)
+    # tflearn.is_training(False, session=sess)
 
     val_subsets = [data_util.liver.Split.VALID]
     if args.val_subset is not None:
         val_subsets = args.val_subset.split(',')
 
-    tflearn.is_training(False, session=sess)
+    # tflearn.is_training(False, session=sess)
     keys = ['pt_mask', 'landmark_dists', 'jaccs', 'dices', 'jacobian_det']
     if not os.path.exists('evaluate'):
         os.mkdir('evaluate')
