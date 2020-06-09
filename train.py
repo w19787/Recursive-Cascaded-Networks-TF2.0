@@ -84,12 +84,12 @@ def main():
         ret.update([(k + ':0', v) for k, v in kwargs.items()])
         return ret
 
-    with tf.Session(config=tf.ConfigProto()) as sess:
-        saver = tf.train.Saver(tf.get_collection(
-            tf.GraphKeys.GLOBAL_VARIABLES), max_to_keep=5, keep_checkpoint_every_n_hours=5)
+    with tf.compat.v1.Session(config=tf.compat.v1.ConfigProto()) as sess:
+        saver = tf.compat.v1.train.Saver(tf.compat.v1.get_collection(
+            tf.compat.v1.GraphKeys.GLOBAL_VARIABLES), max_to_keep=5, keep_checkpoint_every_n_hours=5)
         if args.checkpoint is None:
             steps = 0
-            tf.global_variables_initializer().run()
+            tf.compat.v1.global_variables_initializer().run()
         else:
             if '\\' not in args.checkpoint and '/' not in args.checkpoint:
                 args.checkpoint = os.path.join(
@@ -97,14 +97,14 @@ def main():
             if os.path.isdir(args.checkpoint):
                 args.checkpoint = tf.train.latest_checkpoint(args.checkpoint)
 
-            tf.global_variables_initializer().run()
+            tf.compat.v1.global_variables_initializer().run()
             checkpoints = args.checkpoint.split(';')
             if args.clear_steps:
                 steps = 0
             else:
                 steps = int(re.search('model-(\d+)', checkpoints[0]).group(1))
             for cp in checkpoints:
-                saver = tf.train.Saver()
+                saver = tf.compat.v1.train.Saver()
                 saver.restore(sess, cp)
 
         data_args = eval('dict({})'.format(args.data_args))
@@ -154,7 +154,7 @@ def main():
             summary_path = os.path.join(repoRoot, log_dir, run_id)
             if not os.path.exists(summary_path):
                 os.makedirs(summary_path)
-            summaryWriter = tf.summary.FileWriter(summary_path, sess.graph)
+            summaryWriter = tf.compat.v1.summary.FileWriter(summary_path, sess.graph)
             with open(os.path.join(modelPrefix, 'args.json'), 'w') as fo:
                 json.dump(vars(args), fo)
 
@@ -188,7 +188,7 @@ def main():
             summ, _ = sess.run([framework.summaryExtra, framework.adamOpt],
                                set_tf_keys(fd, learningRate=lr))
 
-            for v in tf.Summary().FromString(summ).value:
+            for v in tf.compat.v1.Summary().FromString(summ).value:
                 if v.tag == 'loss':
                     loss = v.simple_value
 
@@ -228,8 +228,8 @@ def main():
                             Split.VALID, loop=False, batch_size=batchSize)
                         metrics = framework.validate(
                             sess, val_gen, summary=True)
-                        val_summ = tf.Summary(value=[
-                            tf.Summary.Value(tag='val_' + k, simple_value=v) for k, v in metrics.items()
+                        val_summ = tf.compat.v1.Summary(value=[
+                            tf.compat.v1.Summary.Value(tag='val_' + k, simple_value=v) for k, v in metrics.items()
                         ])
                         summaryWriter.add_summary(val_summ, steps)
                     except:

@@ -13,13 +13,13 @@ def sample_power(lo, hi, k, size=None):
     r = (hi - lo) / 2
     center = (hi + lo) / 2
     r = r ** (1 / k)
-    points = (tf.random_uniform(size, dtype=tf.float32) - 0.5) * 2 * r
+    points = (tf.random.uniform(size, dtype=tf.float32) - 0.5) * 2 * r
     points = (tf.abs(points) ** k) * tf.sign(points)
     return points + center
 
 
 def pad_3d(mat, pad):
-    return tf.pad(mat, [[0, 0], [pad, pad], [pad, pad], [pad, pad], [0, 0]], "CONSTANT")
+    return tf.pad(tensor=mat, paddings=[[0, 0], [pad, pad], [pad, pad], [pad, pad], [0, 0]], mode="CONSTANT")
 
 
 def resize_linear(target_shape, control_fields):
@@ -51,14 +51,14 @@ def resize_linear(target_shape, control_fields):
             (1 - u) * expand_points_r[:, :, :, d: d + ret_n]
         return ret
 
-    ret = interpolate_axis(tf.transpose(control_fields, [0, 1, 3, 2, 4]))
-    ret = interpolate_axis(tf.transpose(ret, [0, 3, 2, 1, 4]))
-    ret = interpolate_axis(tf.transpose(ret, [0, 3, 1, 2, 4]))
+    ret = interpolate_axis(tf.transpose(a=control_fields, perm=[0, 1, 3, 2, 4]))
+    ret = interpolate_axis(tf.transpose(a=ret, perm=[0, 3, 2, 1, 4]))
+    ret = interpolate_axis(tf.transpose(a=ret, perm=[0, 3, 1, 2, 4]))
     return ret
 
 
 def meshgrids(shape, flatten=True, name=None):
-    with tf.name_scope(name, "meshgrid", [shape]):
+    with tf.compat.v1.name_scope(name, "meshgrid", [shape]):
         indices_x = tf.range(0, shape[1])
         indices_y = tf.range(0, shape[2])
         indices_z = tf.range(0, shape[3])
@@ -74,7 +74,7 @@ def meshgrids(shape, flatten=True, name=None):
 
 
 def meshgrids_like(tensor, flatten=True, name=None):
-    return meshgrids(tf.shape(tensor), flatten, name)
+    return meshgrids(tf.shape(input=tensor), flatten, name)
 
 
 def warp_points(flow_fields, pts):
@@ -85,14 +85,14 @@ def warp_points(flow_fields, pts):
     pts: [batch, 6, 3] 
     '''
     moving_pts = meshgrids_like(flow_fields, flatten=False) + flow_fields
-    shape = tf.shape(flow_fields)
+    shape = tf.shape(input=flow_fields)
     moving_pts = tf.reshape(moving_pts, tf.stack(
         [shape[0], shape[1] * shape[2] * shape[3], 1, 3]))
     distance = tf.sqrt(tf.reduce_sum(
-        (moving_pts - tf.expand_dims(pts, axis=1)) ** 2, axis=-1))
-    closest = tf.cast(tf.argmin(distance, axis=1), tf.int32)
-    fixed_pts = tf.stack([tf.div(closest, shape[2] * shape[3]), tf.mod(
-        tf.div(closest, shape[3]), shape[2]), tf.mod(closest, shape[3])], axis=2)
+        input_tensor=(moving_pts - tf.expand_dims(pts, axis=1)) ** 2, axis=-1))
+    closest = tf.cast(tf.argmin(input=distance, axis=1), tf.int32)
+    fixed_pts = tf.stack([tf.compat.v1.div(closest, shape[2] * shape[3]), tf.math.floormod(
+        tf.compat.v1.div(closest, shape[3]), shape[2]), tf.math.floormod(closest, shape[3])], axis=2)
     return fixed_pts
 
 
@@ -110,7 +110,7 @@ def free_form_fields(shape, control_fields, padding='same'):
     '''
     interpolate_range = 4
 
-    control_fields = tf.convert_to_tensor(control_fields, dtype=tf.float32)
+    control_fields = tf.convert_to_tensor(value=control_fields, dtype=tf.float32)
     _, n, m, t, _ = control_fields.shape.as_list()
     if padding == 'same':
         control_fields = pad_3d(control_fields, 1)
@@ -119,7 +119,7 @@ def free_form_fields(shape, control_fields, padding='same'):
         m -= 2
         t -= 2
     control_fields = tf.reshape(tf.transpose(
-        control_fields, (1, 2, 3, 0, 4)), [n + 2, m + 2, t + 2, -1])
+        a=control_fields, perm=(1, 2, 3, 0, 4)), [n + 2, m + 2, t + 2, -1])
 
     assert shape[0] % (n - 1) == 0
     s_x = shape[0] // (n - 1)
@@ -137,7 +137,7 @@ def free_form_fields(shape, control_fields, padding='same'):
     u_y = (tf.range(0, s_y, dtype=tf.float32) + 0.5) / s_y  # s_y
     coef_y = get_coef(u_y)  # (s_y, 4)
 
-    flow = tf.reshape(tf.transpose(flow), [shape_cf[1], -1])
+    flow = tf.reshape(tf.transpose(a=flow), [shape_cf[1], -1])
     flow = tf.concat([tf.matmul(coef_y,
                                 tf.reshape(flow[i: i + interpolate_range], [interpolate_range, -1]))
                       for i in range(0, m - 1)],
@@ -148,12 +148,12 @@ def free_form_fields(shape, control_fields, padding='same'):
     u_z = (tf.range(0, s_z, dtype=tf.float32) + 0.5) / s_z  # s_y
     coef_z = get_coef(u_z)  # (s_y, 4)
 
-    flow = tf.reshape(tf.transpose(flow), [shape_cf[2], -1])
+    flow = tf.reshape(tf.transpose(a=flow), [shape_cf[2], -1])
     flow = tf.concat([tf.matmul(coef_z,
                                 tf.reshape(flow[i: i + interpolate_range], [interpolate_range, -1]))
                       for i in range(0, t - 1)],
                      axis=0)
     # print(flow.shape)
     flow = tf.reshape(flow, [shape[2], -1, 3, shape[1], shape[0]])
-    flow = tf.transpose(flow, [1, 4, 3, 0, 2])
+    flow = tf.transpose(a=flow, perm=[1, 4, 3, 0, 2])
     return flow

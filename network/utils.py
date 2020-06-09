@@ -103,18 +103,18 @@ class Network:
         return self._name
 
     def __call__(self, *args, **kwargs):
-        with tf.variable_scope(self.name, reuse=self._built) as self.scope:
+        with tf.compat.v1.variable_scope(self.name, reuse=self._built) as self.scope:
             self._built = True
             return self.build(*args, **kwargs)
 
     @property
     def trainable_variables(self):
         if isinstance(self.trainable, str):
-            var_list = tf.get_collection(
-                tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.scope.name)
+            var_list = tf.compat.v1.get_collection(
+                tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES, scope=self.scope.name)
             return [var for var in var_list if re.fullmatch(self.trainable, var.name)]
         elif self.trainable:
-            return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.scope.name)
+            return tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES, scope=self.scope.name)
         else:
             return []
 
@@ -193,7 +193,7 @@ class MultiGPUs:
         return ret
 
     def reshape(self, tensor):
-        return tf.reshape(tensor, tf.concat([tf.stack([self.num, -1]), tf.shape(tensor)[1:]], axis = 0))
+        return tf.reshape(tensor, tf.concat([tf.stack([self.num, -1]), tf.shape(input=tensor)[1:]], axis = 0))
 
 
 class FileRestorer:
@@ -223,7 +223,7 @@ class FileRestorer:
                         print("Ignoring: {} ---> {}".format(key, target))
                     if var is not None:
                         assign_ops.append(
-                            tf.assign(var, reader.get_tensor(key)))
+                            tf.compat.v1.assign(var, reader.get_tensor(key)))
             sess.run(assign_ops)
         except Exception as e:  # pylint: disable=broad-except
             raise(e)
@@ -269,7 +269,7 @@ def restore_exists(sess, file_name, show=False):
                 except KeyError as e:
                     print("Ignoring: " + key)
                 if var is not None:
-                    assign_ops.append(tf.assign(var, reader.get_tensor(key)))
+                    assign_ops.append(tf.compat.v1.assign(var, reader.get_tensor(key)))
             sess.run(assign_ops)
     except Exception as e:  # pylint: disable=broad-except
         print(str(e))

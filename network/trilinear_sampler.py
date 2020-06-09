@@ -27,22 +27,22 @@ class TrilinearSampler(Layer):
 
     def _repeat(self, x, n_repeats):
         rep = tf.transpose(
-            tf.expand_dims(tf.ones(shape=tf.stack([n_repeats, ])), 1), [1, 0])
+            a=tf.expand_dims(tf.ones(shape=tf.stack([n_repeats, ])), 1), perm=[1, 0])
         rep = tf.cast(rep, dtype='int32')
         x = tf.matmul(tf.reshape(x, (-1, 1)), rep)
         return tf.reshape(x, [-1])
 
     def _interpolate(self, im, x, y, z):
 
-        im = tf.pad(im, [[0, 0], [1, 1], [1, 1], [1, 1], [0, 0]], "CONSTANT")
+        im = tf.pad(tensor=im, paddings=[[0, 0], [1, 1], [1, 1], [1, 1], [0, 0]], mode="CONSTANT")
 
-        num_batch = tf.shape(im)[0]
-        height = tf.shape(im)[1]
-        width = tf.shape(im)[2]
-        depth = tf.shape(im)[3]
-        channels = tf.shape(im)[4]
+        num_batch = tf.shape(input=im)[0]
+        height = tf.shape(input=im)[1]
+        width = tf.shape(input=im)[2]
+        depth = tf.shape(input=im)[3]
+        channels = tf.shape(input=im)[4]
 
-        out_size = tf.shape(x)[1]
+        out_size = tf.shape(input=x)[1]
 
         x = tf.reshape(x, [-1])
         y = tf.reshape(y, [-1])

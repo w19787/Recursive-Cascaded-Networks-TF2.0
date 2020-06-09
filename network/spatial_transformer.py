@@ -21,8 +21,8 @@ class Fast3DTransformer(Layer):
     def call(self, inputs):
         im, flow = inputs
         if self.padding:
-            im = tf.pad(im, [[0, 0], [1, 1], [1, 1], [1, 1], [0, 0]], "CONSTANT")
-            flow = tf.pad(flow, [[0, 0], [1, 1], [1, 1], [1, 1], [0, 0]], "CONSTANT")
+            im = tf.pad(tensor=im, paddings=[[0, 0], [1, 1], [1, 1], [1, 1], [0, 0]], mode="CONSTANT")
+            flow = tf.pad(tensor=flow, paddings=[[0, 0], [1, 1], [1, 1], [1, 1], [0, 0]], mode="CONSTANT")
         warped = tf.user_ops.reconstruction(im, flow)
         if self.padding:
             warped = warped[:, 1: -1, 1: -1, 1: -1, :]
@@ -60,10 +60,10 @@ class Dense3DSpatialTransformer(Layer):
 
     def _transform(self, I, dx, dy, dz):
 
-        batch_size = tf.shape(dx)[0]
-        height = tf.shape(dx)[1]
-        width = tf.shape(dx)[2]
-        depth = tf.shape(dx)[3]
+        batch_size = tf.shape(input=dx)[0]
+        height = tf.shape(input=dx)[1]
+        width = tf.shape(input=dx)[2]
+        depth = tf.shape(input=dx)[3]
 
         # Convert dx and dy to absolute locations
         x_mesh, y_mesh, z_mesh = self._meshgrid(height, width, depth)
@@ -82,15 +82,15 @@ class Dense3DSpatialTransformer(Layer):
 
     def _repeat(self, x, n_repeats):
         rep = tf.transpose(
-            tf.expand_dims(tf.ones(shape=tf.stack([n_repeats, ])), 1), [1, 0])
+            a=tf.expand_dims(tf.ones(shape=tf.stack([n_repeats, ])), 1), perm=[1, 0])
         rep = tf.cast(rep, dtype='int32')
         x = tf.matmul(tf.reshape(x, (-1, 1)), rep)
         return tf.reshape(x, [-1])
 
     def _meshgrid(self, height, width, depth):
         x_t = tf.matmul(tf.ones(shape=tf.stack([height, 1])),
-                        tf.transpose(tf.expand_dims(tf.linspace(0.0,
-                                                                tf.cast(width, tf.float32)-1.0, width), 1), [1, 0]))
+                        tf.transpose(a=tf.expand_dims(tf.linspace(0.0,
+                                                                tf.cast(width, tf.float32)-1.0, width), 1), perm=[1, 0]))
         y_t = tf.matmul(tf.expand_dims(tf.linspace(0.0,
                                                    tf.cast(height, tf.float32)-1.0, height), 1),
                         tf.ones(shape=tf.stack([1, width])))
@@ -106,17 +106,17 @@ class Dense3DSpatialTransformer(Layer):
 
     def _interpolate(self, im, x, y, z):
         if self.padding:
-            im = tf.pad(im, [[0, 0], [1, 1], [1, 1], [1, 1], [0, 0]], "CONSTANT")
+            im = tf.pad(tensor=im, paddings=[[0, 0], [1, 1], [1, 1], [1, 1], [0, 0]], mode="CONSTANT")
 
-        num_batch = tf.shape(im)[0]
-        height = tf.shape(im)[1]
-        width = tf.shape(im)[2]
-        depth = tf.shape(im)[3]
+        num_batch = tf.shape(input=im)[0]
+        height = tf.shape(input=im)[1]
+        width = tf.shape(input=im)[2]
+        depth = tf.shape(input=im)[3]
         channels = im.get_shape().as_list()[4]
 
-        out_height = tf.shape(x)[1]
-        out_width = tf.shape(x)[2]
-        out_depth = tf.shape(x)[3]
+        out_height = tf.shape(input=x)[1]
+        out_width = tf.shape(input=x)[2]
+        out_depth = tf.shape(input=x)[3]
 
         x = tf.reshape(x, [-1])
         y = tf.reshape(y, [-1])

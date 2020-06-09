@@ -16,7 +16,7 @@ def set_tf_keys(feed_dict, **kwargs):
 
 
 def masked_mean(arr, mask):
-    return tf.reduce_sum(arr * mask) / (tf.reduce_sum(mask) + 1e-9)
+    return tf.reduce_sum(input_tensor=arr * mask) / (tf.reduce_sum(input_tensor=mask) + 1e-9)
 
 
 class FrameworkUnsupervised:
@@ -30,20 +30,20 @@ class FrameworkUnsupervised:
         self.reconstruction = Fast3DTransformer() if fast_reconstruction else Dense3DSpatialTransformer()
 
         # input place holder
-        img1 = tf.placeholder(dtype=tf.float32, shape=[
+        img1 = tf.compat.v1.placeholder(dtype=tf.float32, shape=[
                               None, 128, 128, 128, 1], name='voxel1')
-        img2 = tf.placeholder(dtype=tf.float32, shape=[
+        img2 = tf.compat.v1.placeholder(dtype=tf.float32, shape=[
                               None, 128, 128, 128, 1], name='voxel2')
-        seg1 = tf.placeholder(dtype=tf.float32, shape=[
+        seg1 = tf.compat.v1.placeholder(dtype=tf.float32, shape=[
                               None, 128, 128, 128, 1], name='seg1')
-        seg2 = tf.placeholder(dtype=tf.float32, shape=[
+        seg2 = tf.compat.v1.placeholder(dtype=tf.float32, shape=[
                               None, 128, 128, 128, 1], name='seg2')
-        point1 = tf.placeholder(dtype=tf.float32, shape=[
+        point1 = tf.compat.v1.placeholder(dtype=tf.float32, shape=[
                                 None, 6, 3], name='point1')
-        point2 = tf.placeholder(dtype=tf.float32, shape=[
+        point2 = tf.compat.v1.placeholder(dtype=tf.float32, shape=[
                                 None, 6, 3], name='point2')
 
-        bs = tf.shape(img1)[0]
+        bs = tf.shape(input=img1)[0]
         augImg1, preprocessedImg2 = img1 / 255.0, img2 / 255.0
 
         aug = self.net_args.pop('augmentation', None)
@@ -54,33 +54,33 @@ class FrameworkUnsupervised:
             augFlow = transform.free_form_fields(imgs, control_fields)
 
             def augmentation(x):
-                return tf.cond(tflearn.get_training_mode(), lambda: self.reconstruction([x, augFlow]),
-                               lambda: x)
+                return tf.cond(pred=tflearn.get_training_mode(), true_fn=lambda: self.reconstruction([x, augFlow]),
+                               false_fn=lambda: x)
 
             def augmenetation_pts(incoming):
                 def aug(incoming):
                     aug_pt = tf.cast(transform.warp_points(
                         augFlow, incoming), tf.float32)
                     pt_mask = tf.cast(tf.reduce_all(
-                        incoming >= 0, axis=-1, keep_dims=True), tf.float32)
+                        input_tensor=incoming >= 0, axis=-1, keepdims=True), tf.float32)
                     return aug_pt * pt_mask - (1 - pt_mask)
-                return tf.cond(tflearn.get_training_mode(), lambda: aug(incoming), lambda: incoming)
+                return tf.cond(pred=tflearn.get_training_mode(), true_fn=lambda: aug(incoming), false_fn=lambda: incoming)
             
             augImg2 = augmentation(preprocessedImg2)
             augSeg2 = augmentation(seg2)
             augPt2 = augmenetation_pts(point2)
         elif aug == 'identity':
             augFlow = tf.zeros(
-                tf.stack([tf.shape(img1)[0], 128, 128, 128, 3]), dtype=tf.float32)
+                tf.stack([tf.shape(input=img1)[0], 128, 128, 128, 3]), dtype=tf.float32)
             augImg2 = preprocessedImg2
             augSeg2 = seg2
             augPt2 = point2
         else:
             raise NotImplementedError('Augmentation {}'.format(aug))
 
-        learningRate = tf.placeholder(tf.float32, [], 'learningRate')
+        learningRate = tf.compat.v1.placeholder(tf.float32, [], 'learningRate')
         if not validation:
-            adamOptimizer = tf.train.AdamOptimizer(learningRate)
+            adamOptimizer = tf.compat.v1.train.AdamOptimizer(learningRate)
 
         self.segmentation_class_value = segmentation_class_value
         self.network = network_class(
@@ -106,22 +106,22 @@ class FrameworkUnsupervised:
         return self.network.data_args
 
     def build_summary(self, predictions):
-        self.loss = tf.reduce_mean(predictions['loss'])
+        self.loss = tf.reduce_mean(input_tensor=predictions['loss'])
         for k in predictions:
             if k.find('loss') != -1:
-                tf.summary.scalar(k, tf.reduce_mean(predictions[k]))
-        self.summaryOp = tf.summary.merge_all()
+                tf.compat.v1.summary.scalar(k, tf.reduce_mean(input_tensor=predictions[k]))
+        self.summaryOp = tf.compat.v1.summary.merge_all()
 
         if self.summaryType == 'full':
-            tf.summary.scalar('dice_score', tf.reduce_mean(
-                self.predictions['dice_score']))
-            tf.summary.scalar('landmark_dist', masked_mean(
+            tf.compat.v1.summary.scalar('dice_score', tf.reduce_mean(
+                input_tensor=self.predictions['dice_score']))
+            tf.compat.v1.summary.scalar('landmark_dist', masked_mean(
                 self.predictions['landmark_dist'], self.predictions['pt_mask']))
             preds = tf.reduce_sum(
-                tf.cast(self.predictions['jacc_score'] > 0, tf.float32))
-            tf.summary.scalar('jacc_score', tf.reduce_sum(
-                self.predictions['jacc_score']) / (preds + 1e-8))
-            self.summaryExtra = tf.summary.merge_all()
+                input_tensor=tf.cast(self.predictions['jacc_score'] > 0, tf.float32))
+            tf.compat.v1.summary.scalar('jacc_score', tf.reduce_sum(
+                input_tensor=self.predictions['jacc_score']) / (preds + 1e-8))
+            self.summaryExtra = tf.compat.v1.summary.merge_all()
         else:
             self.summaryExtra = self.summaryOp
 

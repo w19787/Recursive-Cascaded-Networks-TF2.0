@@ -84,10 +84,10 @@ def main():
         fast_reconstruction=args.fast_reconstruction, validation=True)
     print('Graph built')
 
-    sess = tf.Session()
+    sess = tf.compat.v1.Session()
 
-    saver = tf.train.Saver(tf.get_collection(
-        tf.GraphKeys.GLOBAL_VARIABLES))
+    saver = tf.compat.v1.train.Saver(tf.compat.v1.get_collection(
+        tf.compat.v1.GraphKeys.GLOBAL_VARIABLES))
     checkpoint = args.checkpoint
     saver.restore(sess, checkpoint)
     tflearn.is_training(False, session=sess)

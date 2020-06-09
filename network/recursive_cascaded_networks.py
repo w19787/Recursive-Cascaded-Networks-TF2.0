@@ -20,10 +20,10 @@ def mask_metrics(seg1, seg2):
     seg2 = tf.reshape(seg2, [-1, sizes])
     seg1 = tf.cast(seg1 > 128, tf.float32)
     seg2 = tf.cast(seg2 > 128, tf.float32)
-    dice_score = 2.0 * tf.reduce_sum(seg1 * seg2, axis=-1) / (
-        tf.reduce_sum(seg1, axis=-1) + tf.reduce_sum(seg2, axis=-1))
-    union = tf.reduce_sum(tf.maximum(seg1, seg2), axis=-1)
-    return (dice_score, tf.reduce_sum(tf.minimum(seg1, seg2), axis=-1) / tf.maximum(0.01, union))
+    dice_score = 2.0 * tf.reduce_sum(input_tensor=seg1 * seg2, axis=-1) / (
+        tf.reduce_sum(input_tensor=seg1, axis=-1) + tf.reduce_sum(input_tensor=seg2, axis=-1))
+    union = tf.reduce_sum(input_tensor=tf.maximum(seg1, seg2), axis=-1)
+    return (dice_score, tf.reduce_sum(input_tensor=tf.minimum(seg1, seg2), axis=-1) / tf.maximum(0.01, union))
 
 
 class RecursiveCascadedNetworks(Network):
@@ -132,16 +132,16 @@ class RecursiveCascadedNetworks(Network):
         loss = sum([r['loss'] * params['weight']
                     for r, (stem, params) in zip(stem_results, self.stems)])
 
-        pt_mask1 = tf.reduce_any(tf.reduce_any(pt1 >= 0, -1), -1)
-        pt_mask2 = tf.reduce_any(tf.reduce_any(pt2 >= 0, -1), -1)
+        pt_mask1 = tf.reduce_any(input_tensor=tf.reduce_any(input_tensor=pt1 >= 0, axis=-1), axis=-1)
+        pt_mask2 = tf.reduce_any(input_tensor=tf.reduce_any(input_tensor=pt2 >= 0, axis=-1), axis=-1)
         pt1 = tf.maximum(pt1, 0.0)
 
         moving_pt1 = pt1 + self.trilinear_sampler([flow, pt1])
 
         pt_mask = tf.cast(pt_mask1, tf.float32) * tf.cast(pt_mask2, tf.float32)
         landmark_dists = tf.sqrt(tf.reduce_sum(
-            (moving_pt1 - pt2) ** 2, axis=-1)) * tf.expand_dims(pt_mask, axis=-1)
-        landmark_dist = tf.reduce_mean(landmark_dists, axis=-1)
+            input_tensor=(moving_pt1 - pt2) ** 2, axis=-1)) * tf.expand_dims(pt_mask, axis=-1)
+        landmark_dist = tf.reduce_mean(input_tensor=landmark_dists, axis=-1)
 
         if self.framework.segmentation_class_value is None:
             seg_fixed = seg1
@@ -211,16 +211,16 @@ class RecursiveCascadedNetworks(Network):
         if self.fast_reconstruction:
             _, pearson_r, _ = tf.user_ops.linear_similarity(flatten1, flatten2)
         else:
-            mean1 = tf.reshape(tf.reduce_mean(flatten1, axis=-1), [-1, 1])
-            mean2 = tf.reshape(tf.reduce_mean(flatten2, axis=-1), [-1, 1])
-            var1 = tf.reduce_mean(tf.square(flatten1 - mean1), axis=-1)
-            var2 = tf.reduce_mean(tf.square(flatten2 - mean2), axis=-1)
+            mean1 = tf.reshape(tf.reduce_mean(input_tensor=flatten1, axis=-1), [-1, 1])
+            mean2 = tf.reshape(tf.reduce_mean(input_tensor=flatten2, axis=-1), [-1, 1])
+            var1 = tf.reduce_mean(input_tensor=tf.square(flatten1 - mean1), axis=-1)
+            var2 = tf.reduce_mean(input_tensor=tf.square(flatten2 - mean2), axis=-1)
             cov12 = tf.reduce_mean(
-                (flatten1 - mean1) * (flatten2 - mean2), axis=-1)
+                input_tensor=(flatten1 - mean1) * (flatten2 - mean2), axis=-1)
             pearson_r = cov12 / tf.sqrt((var1 + 1e-6) * (var2 + 1e-6))
 
         raw_loss = 1 - pearson_r
-        raw_loss = tf.reduce_sum(raw_loss)
+        raw_loss = tf.reduce_sum(input_tensor=raw_loss)
         return raw_loss
 
     def regularize_loss(self, flow):
@@ -230,7 +230,7 @@ class RecursiveCascadedNetworks(Network):
         return ret
 
     def jacobian_det(self, flow):
-        _, var = tf.nn.moments(tf.linalg.det(tf.stack([
+        _, var = tf.nn.moments(x=tf.linalg.det(tf.stack([
             flow[:, 1:, :-1, :-1] - flow[:, :-1, :-1, :-1] +
             tf.constant([1, 0, 0], dtype=tf.float32),
             flow[:, :-1, 1:, :-1] - flow[:, :-1, :-1, :-1] +

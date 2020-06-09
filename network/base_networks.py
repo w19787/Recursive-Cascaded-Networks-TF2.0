@@ -274,7 +274,7 @@ class VTNAffineStem(Network):
             return sigma1, sigma2, sigma3
         s1, s2, s3 = elem_sym_polys_of_eigen_values(C)
         ortho_loss = s1 + (1 + eps) * (1 + eps) * s2 / s3 - 3 * 2 * (1 + eps)
-        ortho_loss = tf.reduce_sum(ortho_loss)
+        ortho_loss = tf.reduce_sum(input_tensor=ortho_loss)
 
         return {
             'flow': flow,

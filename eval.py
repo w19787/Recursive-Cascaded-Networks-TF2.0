@@ -78,11 +78,11 @@ def main():
     ds = Dataset(args.dataset, batch_size=args.batch, paired=args.paired, **
                  eval('dict({})'.format(args.data_args)))
 
-    sess = tf.Session()
-    tf.global_variables_initializer().run()
+    sess = tf.compat.v1.Session()
+    tf.compat.v1.global_variables_initializer().run()
 
-    saver = tf.train.Saver(tf.get_collection(
-        tf.GraphKeys.GLOBAL_VARIABLES))
+    saver = tf.compat.v1.train.Saver(tf.compat.v1.get_collection(
+        tf.compat.v1.GraphKeys.GLOBAL_VARIABLES))
     checkpoint = args.checkpoint
     saver.restore(sess, checkpoint)
     tflearn.is_training(False, session=sess)
