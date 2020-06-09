@@ -224,11 +224,11 @@ class RecursiveCascadedNetworks(Network):
         return raw_loss
 
     def regularize_loss(self, flow):
-        print(flow.shape)
+        sizes = tf.cast(tf.reduce_prod(tf.shape(flow)[1:5]), tf.float32)
 
         ret = ((tf.nn.l2_loss(flow[:, 1:, :, :] - flow[:, :-1, :, :]) +
                 tf.nn.l2_loss(flow[:, :, 1:, :] - flow[:, :, :-1, :]) +
-                tf.nn.l2_loss(flow[:, :, :, 1:] - flow[:, :, :, :-1])))
+                tf.nn.l2_loss(flow[:, :, :, 1:] - flow[:, :, :, :-1]))/sizes)
         return ret
 
     def jacobian_det(self, flow):
