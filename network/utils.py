@@ -24,7 +24,7 @@ def LeakyReLU(target, alpha=0.1, name=None):
 
 def convolve(opName, inputLayer, inputChannel, outputChannel, kernelSize, stride, stddev=1e-2):
     return Conv2D(outputChannel, kernelSize, strides=stride,
-                  padding='same', activation='linear', bias=True, name=opName)(inputLayer)
+                  padding='same', activation='linear', use_bias=True, name=opName)(inputLayer)
     # kernelVariables = tf.Variable(
     #     tf.truncated_normal(
     #         dtype=tf.float32,

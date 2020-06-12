@@ -32,7 +32,7 @@ import network
 import data_util.liver
 import data_util.brain
 
-
+tf.compat.v1.disable_eager_execution()
 def main():
     if args.checkpoint is None:
         print('Checkpoint must be specified!')
@@ -79,7 +79,7 @@ def main():
                  eval('dict({})'.format(args.data_args)))
 
     sess = tf.compat.v1.Session()
-    tf.compat.v1.global_variables_initializer().run()
+    tf.compat.v1.global_variables_initializer().run(session=sess)
 
     saver = tf.compat.v1.train.Saver(tf.compat.v1.get_collection(
         tf.compat.v1.GraphKeys.GLOBAL_VARIABLES))

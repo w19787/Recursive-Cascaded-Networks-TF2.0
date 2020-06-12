@@ -223,9 +223,9 @@ class VTNAffineStem(Network):
             'conv6_1', conv6,      512,  3, 1)
         ks = conv6_1.shape.as_list()[1:4]
         conv7_W = Conv3D(
-            9, ks, strides=1, padding='valid', activation='linear', bias=False, name='conv7_W')(conv6_1)
+            9, ks, strides=1, padding='valid', activation='linear', use_bias=False, name='conv7_W')(conv6_1)
         conv7_b = Conv3D(
-            3, ks, strides=1, padding='valid', activation='linear', bias=False, name='conv7_b')(conv6_1)
+            3, ks, strides=1, padding='valid', activation='linear', use_bias=False, name='conv7_b')(conv6_1)
 
         I = [[[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]]
         W = tf.reshape(conv7_W, [-1, 3, 3]) * self.flow_multiplier
