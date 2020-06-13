@@ -6,7 +6,7 @@ By Shengyu Zhao, Yue Dong, Eric I-Chao Chang, Yan Xu.
 Paper link: [[arXiv]](https://arxiv.org/pdf/1907.12353)
 
 
-## This repository is tensorflow 2.0 migration version of origin git project(https://github.com/w19787/Recursive-Cascaded-Networks)
+## This repository is tensorflow 2.0 migration version of origin git project(https://github.com/microsoft/Recursive-Cascaded-Networks)
 
 ## Introduction
 
@@ -103,6 +103,9 @@ The following script is for training:
 `python train.py -b BASE_NETWORK -n NUMBER_OF_CASCADES -d DATASET -g YOUR_GPU_DEVICES`
 
 `BASE_NETWORK` specifies the base network (default to `VTN`, also can be `VoxelMorph`). `NUMBER_OF_CASCADES` specifies the number of cascades to train (not including the affine cascade), default to `1`.  `DATASET` specifies the data config (default to `datasets/liver.json`, also can be `datasets/brain.json`). `YOUR_GPU_DEVICES` specifies the GPU ids to use (default to `0`), split by commas with multi-GPU support, or `-1` if CPU only. Make sure that the number of GPUs specified evenly divides the `BATCH_SIZE` that can be specified using `--batch BATCH_SIZE` (default to `4`). Specify `-c CHECKPOINT` to start with a previous checkpoint.
+
+### Known issue for this TF2.0 migration [TODO]
+- there is issue to support multiple gpus. single gpu training work fine.
 
 ## Demo
 
