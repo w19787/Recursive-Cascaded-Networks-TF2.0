@@ -1,23 +1,23 @@
 {
   "files": {
     "lpba": {
-      "path": "/home/w19787/tensorflow_datasets/microsoft_register/brain_val/lpba_val.h5",
+      "path": "datasets/lpba_val.h5",
       "type": "HDF5"
     },
     "adni": {
-      "path": "/home/w19787/tensorflow_datasets/microsoft_register/brain_train/adni.h5",
+      "path": "datasets/adni.h5",
       "type": "HDF5"
     },
     "abide": {
-      "path": "/home/w19787/tensorflow_datasets/microsoft_register/brain_train/abide.h5",
+      "path": "datasets/abide.h5",
       "type": "HDF5"
     },
     "abidef": {
-      "path": "/home/w19787/tensorflow_datasets/microsoft_register/brain_train/abidef.h5",
+      "path": "datasets/abidef.h5",
       "type": "HDF5"
     },
     "adhd": {
-      "path": "/home/w19787/tensorflow_datasets/microsoft_register/brain_train/adhd.h5",
+      "path": "datasets/adhd.h5",
       "type": "HDF5"
     }
   },
